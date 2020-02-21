@@ -197,6 +197,13 @@ directories defined as "writable":
     it after each new deploy; however, you can't reset the OPcache contents from
     the command line; EasyDeploy uses a smart trick to reset the cache, but it
     needs to know the URL of the homepage of your application; e.g. `https://symfony.com`)
+  * `->resetOpCacheRetries(int $retries)` (in case OPcache reset fails, retry it.
+    It can happen on some hosting with strong caching policies that right after
+    file creation it will return 404 instead of executing script. Use this option
+    if it happens for you)
+  * `->resetOpCacheRetryDelay(int $delay)` (delay in ms between OPcache clear
+    attempts. IT defaults to 2000ms to comply with default php.ini
+    opcache.revalidate_freq setting that is crucial for retries)
 
 Execution Flow
 --------------
@@ -317,6 +324,7 @@ return new class extends DefaultDeployer
             ->repositoryUrl('git@github.com:symfony/symfony-demo.git')
             ->symfonyEnvironment('prod')
             ->resetOpCacheFor('https://demo.symfony.com')
+            ->resetOpCacheRetries(5)
         ;
     }
 

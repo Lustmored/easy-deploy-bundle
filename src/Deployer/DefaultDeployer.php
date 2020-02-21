@@ -19,6 +19,7 @@ use EasyCorp\Bundle\EasyDeployBundle\Requirement\CommandExists;
 use EasyCorp\Bundle\EasyDeployBundle\Server\Property;
 use EasyCorp\Bundle\EasyDeployBundle\Server\Server;
 use EasyCorp\Bundle\EasyDeployBundle\Task\TaskCompleted;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 abstract class DefaultDeployer extends AbstractDeployer
 {
@@ -407,7 +408,22 @@ abstract class DefaultDeployer extends AbstractDeployer
 
         $this->log('<h2>Resetting the OPcache contents</>');
         $phpScriptPath = sprintf('__easy_deploy_opcache_reset_%s.php', bin2hex(random_bytes(8)));
-        $this->runRemote(sprintf('echo "<?php opcache_reset();" > {{ web_dir }}/%s && wget %s/%s && rm -f {{ web_dir }}/%s', $phpScriptPath, $homepageUrl, $phpScriptPath, $phpScriptPath));
+        $maxRetires = $this->getConfig(Option::resetOpCacheRetries);
+        $retryDelay = $this->getConfig(Option::resetOpCacheRetryDelay);
+        $this->runRemote(sprintf('echo "<?php opcache_reset();" > {{ web_dir }}/%s', $phpScriptPath));
+        for($currentRetries = 0; $currentRetries <= $maxRetires; ++$currentRetries) {
+            try {
+                $this->runRemote(sprintf('wget %s/%s && rm -f {{ web_dir }}/%s', $homepageUrl, $phpScriptPath, $phpScriptPath));
+                break;
+            } catch (ProcessFailedException $exception) {
+                if($currentRetries < $maxRetires) {
+                    $this->log('<h3>Retrying...</>');
+                    usleep(1000*$retryDelay);
+                } else {
+                    throw $exception;
+                }
+            }
+        }
     }
 
     private function doKeepReleases(): void

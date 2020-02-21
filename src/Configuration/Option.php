@@ -43,6 +43,8 @@ final class Option
     const repositoryBranch = 'repositoryBranch';
     const repositoryUrl = 'repositoryUrl';
     const resetOpCacheFor = 'resetOpCacheFor';
+    const resetOpCacheRetries = 'resetOpCacheRetries';
+    const resetOpCacheRetryDelay = 'resetOpCacheRetryDelay';
     const servers = 'servers';
     const sharedFiles = 'sharedFiles';
     const sharedDirs = 'sharedDirs';

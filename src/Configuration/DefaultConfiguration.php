@@ -60,6 +60,8 @@ final class DefaultConfiguration extends AbstractConfiguration
     private $sharedFiles = [];
     private $sharedDirs = [];
     private $resetOpCacheFor;
+    private $resetOpCacheRetries = 0;
+    private $resetOpCacheRetryDelay = 2000;
 
     public function __construct(string $localProjectDir)
     {
@@ -355,6 +357,25 @@ final class DefaultConfiguration extends AbstractConfiguration
         }
 
         $this->resetOpCacheFor = rtrim($homepageUrl, '/');
+
+        return $this;
+    }
+
+    // Number of opcache cleaning retries if on fails.
+    // Some hosting will return 404 right after file creation due to strong caching.
+    // Defaults to 0 to be fully compatible with previous versions
+    public function resetOpCacheRetries(int $retries): self
+    {
+        $this->resetOpCacheRetries = $retries;
+
+        return $this;
+    }
+
+    // Delay between consecutive opcache clear retries in ms.
+    // Defaults to 2000 as the default opcache.revalidate_freq
+    public function resetOpCacheRetryDelay(int $delay): self
+    {
+        $this->resetOpCacheRetryDelay = $delay;
 
         return $this;
     }
